@@ -1,4 +1,5 @@
 // Importing required modules and libraries
+const uuid = require('uuid').v4; // v4 is for generating random UUIDs
 const express = require('express');
 const cors = require('cors');
 const {
@@ -56,61 +57,58 @@ initializeServer();
 
 // Login API endpoint
 app.post('/api/login', (req, res) => {
-    const {username, password} = req.body;
+  const { username, password } = req.body;
 
-    // Use getConnection to get a database connection
-    getConnection((err, connection) => {
-        if (err) {
-            console.error('Database error:', err);
-            res.json({success: false, message: 'Database error'});
+  // Use getConnection to get a database connection
+  getConnection((err, connection) => {
+    if (err) {
+      console.error('Database error:', err);
+      res.json({ success: false, message: 'Database error' });
+      return;
+    }
+
+    const sql = 'SELECT password FROM users WHERE username = ?';
+
+    connection.query(sql, [username], (err, result) => {
+      // Always release the connection back to the pool
+      connection.release();
+
+      if (err) {
+        console.error('Database error:', err);
+        res.json({ success: false, message: 'Database error' });
+        return;
+      }
+
+      if (result.length === 0) {
+        res.json({ success: false, message: 'Invalid credentials' });
+        return;
+      }
+
+      const dbPassword = result[0].password;
+
+      if (dbPassword === password) {
+        const access_token = uuid(); // Generate a new UUID
+
+        // Update the access_token in the database for this user
+        const updateTokenSql = 'UPDATE users SET access_token = ? WHERE username = ?';
+
+        connection.query(updateTokenSql, [access_token, username], (updateErr) => {
+          if (updateErr) {
+            console.error('Database error when updating access_token:', updateErr);
+            res.json({ success: false, message: 'Database error' });
             return;
-        }
+          }
 
-        const sql = 'SELECT password FROM users WHERE username = ?';
-
-        connection.query(sql, [username], (err, result) => {
-            // Always release the connection back to the pool
-            connection.release();
-
-            if (err) {
-                console.error('Database error:', err);
-                res.json({success: false, message: 'Database error'});
-                return;
-            }
-
-            if (result.length === 0) {
-                res.json({success: false, message: 'Invalid credentials'});
-                return;
-            }
-
-            const dbPassword = result[0].password;
-
-            if (dbPassword === password) {
-                // Query to fetch the access_token for this user
-                const tokenSql = 'SELECT access_token FROM users WHERE username = ?';
-
-                connection.query(tokenSql, [username], (err, tokenResult) => {
-                    if (err) {
-                        console.error('Database error when fetching access_token:', err);
-                        res.json({success: false, message: 'Database error'});
-                        return;
-                    }
-
-                    if (tokenResult.length === 0) {
-                        res.json({success: false, message: 'Could not retrieve access_token'});
-                        return;
-                    }
-
-                    const access_token = tokenResult[0].access_token;
-                    res.json({success: true, access_token});
-                });
-            } else {
-                res.json({success: false, message: 'Invalid credentials'});
-            }
-
+          // Successfully updated the access_token
+          res.json({ success: true, access_token });
         });
+      } else {
+        res.json({ success: false, message: 'Invalid credentials' });
+      }
     });
+  });
 });
+
 
 // Start the server
 app.listen(SERVER_PORT, SERVER_HOST, () => {
