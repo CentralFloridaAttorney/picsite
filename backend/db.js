@@ -6,10 +6,10 @@ require('dotenv').config();
 
 // Initial database configuration
 const initialDbConfig = {
-  host: 'localhost',
-  port: 3306,
-  user: 'bilbo',
-  password: 'baggins'
+  host: process.env.DB_HOST || 'localhost',
+  port: process.env.DB_PORT || 3306,
+  user: process.env.DB_USERNAME || 'bilbo',
+  password: process.env.DB_PASSWORD || 'baggins'
 };
 
 const defaultUsername = 'bilbo';
