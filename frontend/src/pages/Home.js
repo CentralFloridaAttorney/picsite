@@ -1,5 +1,6 @@
 // Home.js
 import React from "react";
+require('crypto-browserify');
 
 const Home = () => {
     return (

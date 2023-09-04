@@ -1,19 +1,19 @@
 import React, { useState } from 'react';
-require('crypto-browserify')
+
+// Importing crypto-browserify, making sure to keep the import style consistent.
+// Please validate if it is really required in this file.
+require('crypto-browserify');
+
 const LoginPage = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
-  const REACT_APP_SERVER_HOST = process.env.REACT_APP_SERVER_HOST
-  const REACT_APP_SERVER_PORT = process.env.REACT_APP_SERVER_PORT
 
-  // Define server URL based on environment variables
-  const serverURL = `http://${REACT_APP_SERVER_HOST}:${REACT_APP_SERVER_PORT}`;
 
-  // Function to handle form submission
+  // Asynchronously handle the form submission
   const handleSubmit = async () => {
     try {
-      const response = await fetch(`${serverURL}/api/login`, {
+      const response = await fetch(`http://localhost:55055/api/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -24,7 +24,7 @@ const LoginPage = () => {
       const data = await response.json();
 
       if (data.success) {
-        // Store access_token as a cookie
+        // Store the access_token as a cookie
         document.cookie = `access_token=${data.access_token};path=/`;
         setMessage('Login successful');
       } else {
@@ -36,10 +36,22 @@ const LoginPage = () => {
     }
   };
 
+  // Define inline styles according to your preferences
+  const containerStyle = {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+  };
+
+  const inputStyle = {
+    marginBottom: '20px',
+  };
+
   return (
-    <div>
+    <div style={containerStyle}>
       <h1>Login Page</h1>
-      <div>
+      <div style={inputStyle}>
         <label>
           Username:
           <input
@@ -49,7 +61,7 @@ const LoginPage = () => {
           />
         </label>
       </div>
-      <div>
+      <div style={inputStyle}>
         <label>
           Password:
           <input

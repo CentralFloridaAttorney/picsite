@@ -2,10 +2,10 @@
 const express = require('express');
 const cors = require('cors');
 const {
-  getConnection,
-  createDatabaseIfNotExists,
-  createDefaultTables,
-  createFavicon,
+    getConnection,
+    createDatabaseIfNotExists,
+    createDefaultTables,
+    createFavicon,
 } = require('./db');
 
 // Load environment variables from .env file
@@ -26,29 +26,29 @@ const SERVER_HOST = process.env.SERVER_HOST || 'localhost'; // Fallback to local
 
 // Function to initialize the database and start the server
 const initializeServer = () => {
-  createDatabaseIfNotExists((err) => {
-    if (err) {
-      console.error('Failed to create database:', err);
-      return;
-    }
+    createDatabaseIfNotExists((err) => {
+        if (err) {
+            console.error('Failed to create database:', err);
+            return;
+        }
 
-    console.log('Database created or already exists.');
+        console.log('Database created or already exists.');
 
-    createDefaultTables((err) => {
-      if (err) {
-        console.error('Failed to create or populate tables:', err);
-        return;
-      }
+        createDefaultTables((err) => {
+            if (err) {
+                console.error('Failed to create or populate tables:', err);
+                return;
+            }
 
-      console.log('Tables created and populated with default values.');
+            console.log('Tables created and populated with default values.');
+        });
+
+        createFavicon((err) => {
+            if (err) {
+                console.error('Could not create favicon:', err);
+            }
+        });
     });
-
-    createFavicon((err) => {
-      if (err) {
-        console.error('Could not create favicon:', err);
-      }
-    });
-  });
 };
 
 // Initialize the server
@@ -56,22 +56,63 @@ initializeServer();
 
 // Login API endpoint
 app.post('/api/login', (req, res) => {
-  const { username, password } = req.body;
+    const {username, password} = req.body;
 
-  // Validate credentials (Note: Replace this with proper authentication in production)
-  if (username === 'admin' && password === 'password') {
-    // Here you can generate an access_token using a library or random string
-    const access_token = 'some_access_token';
+    // Use getConnection to get a database connection
+    getConnection((err, connection) => {
+        if (err) {
+            console.error('Database error:', err);
+            res.json({success: false, message: 'Database error'});
+            return;
+        }
 
-    // Send success response
-    res.json({ success: true, access_token });
-  } else {
-    // Send failure response
-    res.json({ success: false });
-  }
+        const sql = 'SELECT password FROM users WHERE username = ?';
+
+        connection.query(sql, [username], (err, result) => {
+            // Always release the connection back to the pool
+            connection.release();
+
+            if (err) {
+                console.error('Database error:', err);
+                res.json({success: false, message: 'Database error'});
+                return;
+            }
+
+            if (result.length === 0) {
+                res.json({success: false, message: 'Invalid credentials'});
+                return;
+            }
+
+            const dbPassword = result[0].password;
+
+            if (dbPassword === password) {
+                // Query to fetch the access_token for this user
+                const tokenSql = 'SELECT access_token FROM users WHERE username = ?';
+
+                connection.query(tokenSql, [username], (err, tokenResult) => {
+                    if (err) {
+                        console.error('Database error when fetching access_token:', err);
+                        res.json({success: false, message: 'Database error'});
+                        return;
+                    }
+
+                    if (tokenResult.length === 0) {
+                        res.json({success: false, message: 'Could not retrieve access_token'});
+                        return;
+                    }
+
+                    const access_token = tokenResult[0].access_token;
+                    res.json({success: true, access_token});
+                });
+            } else {
+                res.json({success: false, message: 'Invalid credentials'});
+            }
+
+        });
+    });
 });
 
 // Start the server
 app.listen(SERVER_PORT, SERVER_HOST, () => {
-  console.log(`Server running on http://${SERVER_HOST}:${SERVER_PORT}/`);
+    console.log(`Server running on http://${SERVER_HOST}:${SERVER_PORT}/`);
 });

@@ -1,7 +1,7 @@
 import React from "react";
 import Home from "./pages/Home";
-import TestDBPage from "./pages/TestDBPage";
 import LoginPage from "./pages/LoginPage";
+require('crypto-browserify');
 
 const App = () =>{
     return (
