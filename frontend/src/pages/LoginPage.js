@@ -19,6 +19,7 @@ const LoginPage = ({onLoginSuccess}) => {
                 body: JSON.stringify({username, password}),
             });
 
+
             const data = await response.json();
 
             if (data.success) {

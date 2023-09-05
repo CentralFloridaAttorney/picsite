@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
-const {getConnection} = require('./db'); // Import getConnection, assuming db.js is in the same folder
+const { getConnection } = require('./db'); // Import getConnection, assuming db.js is in the same folder
+const SECRET_KEY = process.env.SECRET_KEY; // Import your SECRET_KEY
 
-// Convert getAccessTokenForUser to return a Promise
 const getAccessTokenForUser = (username) => {
     return new Promise((resolve, reject) => {
         getConnection((err, connection) => {
@@ -28,22 +28,22 @@ const getAccessTokenForUser = (username) => {
     });
 };
 
-// Make validateToken an async function
 const validateToken = async (req, res, next) => {
     try {
         const authHeader = req.headers['authorization'];
         const usernameHeader = req.headers['username'];
         const token = authHeader && authHeader.split(' ')[1];
 
-        if (token == null) return res.status(401).json({error: 'No token provided'});
+        if (token == null) return res.status(401).json({ error: 'No token provided' });
 
-        const username_access_token = await getAccessTokenForUser(usernameHeader);
-        console.log('Extracted Token:', token);
-        console.log('User-specific Access Token:', username_access_token);
-
-        jwt.verify(token, username_access_token, (err, decodedPayload) => {
+        jwt.verify(token, SECRET_KEY, (err, decodedPayload) => { // Use SECRET_KEY here
             if (err) {
-                return res.status(403).json({error: 'Invalid token', details: err});
+                return res.status(403).json({ error: 'Invalid token', details: err });
+            }
+
+            // Validate if username in header matches with the username in the decoded payload
+            if (usernameHeader && usernameHeader !== decodedPayload.username) {
+                return res.status(403).json({ error: 'Username does not match with the token' });
             }
 
             req.authHeader = {
@@ -55,9 +55,8 @@ const validateToken = async (req, res, next) => {
         });
     } catch (err) {
         console.error('An error occurred:', err);
-        res.status(500).json({error: 'Internal Server Error', details: err});
+        res.status(500).json({ error: 'Internal Server Error', details: err });
     }
 };
-
 
 module.exports = validateToken;
