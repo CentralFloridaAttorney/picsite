@@ -69,10 +69,11 @@ const createDefaultTables = (callback) => {
             (
                 id           CHAR(36) PRIMARY KEY,
                 username     VARCHAR(255) UNIQUE NOT NULL,
-                password     VARCHAR(255)        NOT NULL,
-                access_token CHAR(36)
+                password     VARCHAR(255) NOT NULL,
+                access_token VARCHAR(255)
             );
         `;
+
 
         // SQL query to create the pictures table
         const createPictureTableSQL = `

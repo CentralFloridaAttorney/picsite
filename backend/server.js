@@ -1,116 +1,99 @@
-// Importing required modules and libraries
-const uuid = require('uuid').v4; // v4 is for generating random UUIDs
+const jwt = require('jsonwebtoken');  // Import jsonwebtoken package
+
+
+
+const validateToken = require('./authMiddleware');
+const { v4: uuid } = require('uuid');
 const express = require('express');
 const cors = require('cors');
-const {
-    getConnection,
-    createDatabaseIfNotExists,
-    createDefaultTables,
-    createFavicon,
-} = require('./db');
-
-// Load environment variables from .env file
+const { getConnection, createDatabaseIfNotExists, createDefaultTables, createFavicon } = require('./db');
 require('dotenv').config();
 
-// Create an express app
 const app = express();
-
-// Enable CORS for all routes
 app.use(cors());
-
-// Middleware to parse JSON
 app.use(express.json());
 
-// Load environment variables
-const SERVER_PORT = process.env.SERVER_PORT || 3000; // Fallback to 3000 if SERVER_PORT is not set
-const SERVER_HOST = process.env.SERVER_HOST || 'localhost'; // Fallback to localhost if SERVER_HOST is not set
+const SERVER_PORT = process.env.SERVER_PORT || 3000;
+const SERVER_HOST = process.env.SERVER_HOST || 'localhost';
 
-// Function to initialize the database and start the server
 const initializeServer = () => {
-    createDatabaseIfNotExists((err) => {
-        if (err) {
-            console.error('Failed to create database:', err);
-            return;
-        }
+    createDatabaseIfNotExists(err => {
+        if (err) return console.error('Failed to create database:', err);
+        console.log('Database exists.');
 
-        console.log('Database created or already exists.');
-
-        createDefaultTables((err) => {
-            if (err) {
-                console.error('Failed to create or populate tables:', err);
-                return;
-            }
-
-            console.log('Tables created and populated with default values.');
+        createDefaultTables(err => {
+            if (err) return console.error('Failed to create tables:', err);
+            console.log('Tables exist.');
         });
 
-        createFavicon((err) => {
-            if (err) {
-                console.error('Could not create favicon:', err);
-            }
+        createFavicon(err => {
+            if (err) console.error('Failed to create favicon:', err);
         });
     });
 };
 
-// Initialize the server
 initializeServer();
 
-// Login API endpoint
+const handleDbError = (err, res) => {
+    console.error('Database error:', err);
+    res.json({ success: false, message: 'Database error' });
+};
+
 app.post('/api/login', (req, res) => {
-  const { username, password } = req.body;
+    const { username, password } = req.body;
 
-  // Use getConnection to get a database connection
-  getConnection((err, connection) => {
-    if (err) {
-      console.error('Database error:', err);
-      res.json({ success: false, message: 'Database error' });
-      return;
-    }
+    getConnection((err, connection) => {
+        if (err) return handleDbError(err, res);
 
-    const sql = 'SELECT password FROM users WHERE username = ?';
+        const sql = 'SELECT password FROM users WHERE username = ?';
+        connection.query(sql, [username], (err, result) => {
+            connection.release();
+            if (err) return handleDbError(err, res);
+            if (!result.length) return res.json({ success: false, message: 'Invalid credentials' });
 
-    connection.query(sql, [username], (err, result) => {
-      // Always release the connection back to the pool
-      connection.release();
+            const dbPassword = result[0].password;
 
-      if (err) {
-        console.error('Database error:', err);
-        res.json({ success: false, message: 'Database error' });
-        return;
-      }
+            if (dbPassword !== password) return res.json({ success: false, message: 'Invalid credentials' });
 
-      if (result.length === 0) {
-        res.json({ success: false, message: 'Invalid credentials' });
-        return;
-      }
+            // Create a JWT
+            const access_token = jwt.sign(
+                { username }, // payload: the user info you want to store
+                'yourSecretKey', // secret key: keep this in an environment variable for better security
+                { expiresIn: '1h' } // options: sets token to expire in 1 hour
+            );
 
-      const dbPassword = result[0].password;
-
-      if (dbPassword === password) {
-        const access_token = uuid(); // Generate a new UUID
-
-        // Update the access_token in the database for this user
-        const updateTokenSql = 'UPDATE users SET access_token = ? WHERE username = ?';
-
-        connection.query(updateTokenSql, [access_token, username], (updateErr) => {
-          if (updateErr) {
-            console.error('Database error when updating access_token:', updateErr);
-            res.json({ success: false, message: 'Database error' });
-            return;
-          }
-
-          // Successfully updated the access_token
-          res.json({ success: true, access_token });
+            // Save the JWT to the database (this step is optional)
+            const updateTokenSql = 'UPDATE users SET access_token = ? WHERE username = ?';
+            connection.query(updateTokenSql, [access_token, username], err => {
+                if (err) return handleDbError(err, res);
+                res.json({ success: true, access_token });
+            });
         });
-      } else {
-        res.json({ success: false, message: 'Invalid credentials' });
-      }
     });
-  });
+});
+app.post('/api/filenames', (req, res) => {
+    const { access_token } = req.body;
+
+    getConnection((err, connection) => {
+        if (err) return handleDbError(err, res);
+
+        const findUserIdQuery = 'SELECT user_id FROM users WHERE access_token = ?';
+        connection.query(findUserIdQuery, [access_token], (err, result) => {
+            connection.release();
+            if (err) return handleDbError(err, res);
+            if (!result.length) return res.json({ success: false, message: 'Invalid access token' });
+
+            const userId = result[0].user_id;
+            const fetchFilenamesQuery = 'SELECT file_name FROM pictures WHERE user_id = ?';
+            connection.query(fetchFilenamesQuery, [userId], (err, filenamesResult) => {
+                if (err) return handleDbError(err, res);
+                const filenames = filenamesResult.map(row => row.file_name);
+                res.json({ success: true, filenames });
+            });
+        });
+    });
 });
 
+app.use('/api/validate-token', validateToken);
 
-// Start the server
-app.listen(SERVER_PORT, SERVER_HOST, () => {
-    console.log(`Server running on http://${SERVER_HOST}:${SERVER_PORT}/`);
-});
+app.listen(SERVER_PORT, SERVER_HOST, () => console.log(`Server running on http://${SERVER_HOST}:${SERVER_PORT}/`));

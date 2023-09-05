@@ -1,16 +1,21 @@
-import React from "react";
-import Home from "./pages/Home";
-import LoginPage from "./pages/LoginPage";
-require('crypto-browserify');
+import React, {useState} from 'react';
+import NavBar from './pages/NavBar'; // Don't forget to import your NavBar component
+import Home from './pages/Home';
+import LoginPage from './pages/LoginPage';
 
-const App = () =>{
+const App = () => {
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+    const handleLoginSuccess = () => {
+        setIsLoggedIn(true);
+    };
+
     return (
-        <h1>
-            Welcome to React App that's build using Webpack and Babel separately
-            <Home/>
-            <LoginPage/>
-        </h1>
-    )
-}
+        <div>
+            <NavBar/> {/* NavBar is placed here so it appears on all pages */}
+            {isLoggedIn ? <Home/> : <LoginPage onLoginSuccess={handleLoginSuccess}/>}
+        </div>
+    );
+};
 
-export default App
+export default App;
