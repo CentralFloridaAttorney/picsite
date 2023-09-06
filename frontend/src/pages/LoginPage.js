@@ -1,8 +1,8 @@
 import React, {useState} from 'react';
 import PropTypes from 'prop-types';
-
 const {v4: uuid} = require('uuid');
 require('crypto-browserify');
+const BACKEND_URL = `http://localhost:50011`;
 
 const LoginPage = ({onLoginSuccess}) => {
     const [username, setUsername] = useState('');
@@ -11,7 +11,7 @@ const LoginPage = ({onLoginSuccess}) => {
 
     const handleSubmit = async () => {
         try {
-            const response = await fetch(`http://localhost:55055/api/login`, {
+            const response = await fetch(`${BACKEND_URL}/api/login`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

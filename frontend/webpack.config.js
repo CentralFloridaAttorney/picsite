@@ -1,5 +1,6 @@
 const path = require('path');
-const webpack = require('webpack'); // Add this line at the top
+const webpack = require('webpack');
+const dotenv = require('dotenv').config({ path: __dirname + '/.env' });  // Add this line at the top
 
 module.exports = {
     mode: 'development',
@@ -14,7 +15,7 @@ module.exports = {
     target: 'web',
 
     devServer: {
-        port: 55000,
+        port: 50005,
         static: {
             directory: path.join(__dirname, 'public'),
         },
@@ -30,14 +31,15 @@ module.exports = {
         },
         fallback: {
             "crypto": require.resolve("crypto-browserify"),
-            "process": require.resolve("process/browser") // Add this line for process polyfill
+            "process": require.resolve("process/browser")
+            // Removed "dotenv": require.resolve("dotenv")
         },
     },
 
-    // Add this plugin to define process.env variables
+    // Add this plugin to define process.env variables based on dotenv.parsed
     plugins: [
         new webpack.DefinePlugin({
-            'process.env': JSON.stringify(process.env)
+            'process.env': JSON.stringify(dotenv.parsed)  // Use dotenv.parsed instead of process.env
         })
     ],
 

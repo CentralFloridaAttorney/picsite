@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+const BACKEND_URL = `http://localhost:50011`;
 
 // Function to set a cookie
 const setCookie = (name, value, days) => {
@@ -21,7 +22,7 @@ const Home = () => {
     const fetchId = async () => {
       try {
         // Define API URL
-        const apiUrl = 'http://localhost:55055/api/validate-token';
+        const apiUrl = `${BACKEND_URL}/api/validate-token`;
 
         // Make the GET request
         const response = await axios.get(apiUrl, {
@@ -52,7 +53,7 @@ const Home = () => {
 
   return (
     <div>
-      <h1>Home Page</h1>-
+      <h1>Home Page</h1>
       <img src="default.png" alt="Default" />
       {userId && <p>Welcome, your ID is {userId}</p>}
     </div>

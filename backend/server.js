@@ -1,16 +1,30 @@
-const jwt = require('jsonwebtoken');  // Import jsonwebtoken package
+const jwt = require('jsonwebtoken');
 const validateToken = require('./authMiddleware');
-const {v4: uuid} = require('uuid');
+const { v4: uuid } = require('uuid');
 const express = require('express');
 const cors = require('cors');
-const {getConnection, createDatabaseIfNotExists, createDefaultTables, createFavicon} = require('./db');
+const { getConnection, createDatabaseIfNotExists, createDefaultTables, createFavicon } = require('./db');
 const SECRET_KEY = process.env.SECRET_KEY;
 
 require('dotenv').config();
 
 const app = express();
-app.use(cors());
+
+// Configure CORS to allow multiple origins
+const allowedOrigins = ['http://localhost:50005', 'http://71.43.170.97:50005', 'http://192.168.1.227:50005'];
+
+const corsOptions = {
+  origin: allowedOrigins,
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  credentials: true,
+  optionsSuccessStatus: 204,
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
+
+// Your other middleware and route handling code here
+
 
 const SERVER_PORT = process.env.SERVER_PORT || 3000;
 const SERVER_HOST = process.env.SERVER_HOST || 'localhost';
