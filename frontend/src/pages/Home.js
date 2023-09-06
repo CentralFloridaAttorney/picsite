@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-const BACKEND_URL = `http://localhost:50011`;
+const BACKEND_URL = `http://0.0.0.0:50011`;
+//const BACKEND_URL = `http://71.42.29.18:50011`;
 
 // Function to set a cookie
 const setCookie = (name, value, days) => {

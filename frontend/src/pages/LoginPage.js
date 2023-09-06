@@ -2,7 +2,9 @@ import React, {useState} from 'react';
 import PropTypes from 'prop-types';
 const {v4: uuid} = require('uuid');
 require('crypto-browserify');
-const BACKEND_URL = `http://localhost:50011`;
+const BACKEND_URL = `http://0.0.0.0:50011`;
+//const BACKEND_URL = `http://71.42.29.18:50011`;
+
 
 const LoginPage = ({onLoginSuccess}) => {
     const [username, setUsername] = useState('');

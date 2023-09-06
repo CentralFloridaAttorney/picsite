@@ -15,6 +15,7 @@ module.exports = {
     target: 'web',
 
     devServer: {
+        host: '0.0.0.0',
         port: 50005,
         static: {
             directory: path.join(__dirname, 'public'),

@@ -11,7 +11,7 @@ require('dotenv').config();
 const app = express();
 
 // Configure CORS to allow multiple origins
-const allowedOrigins = ['http://localhost:50005', 'http://71.43.170.97:50005', 'http://192.168.1.227:50005'];
+const allowedOrigins = ['http://localhost:50005', 'http://71.42.29.18:50005', 'http://192.168.1.227:50005', 'http://0.0.0.0:50005'];
 
 const corsOptions = {
   origin: allowedOrigins,
