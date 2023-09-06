@@ -1,12 +1,9 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types';
-const {v4: uuid} = require('uuid');
-require('crypto-browserify');
+
 const BACKEND_URL = `http://0.0.0.0:50011`;
-//const BACKEND_URL = `http://71.42.29.18:50011`;
 
-
-const LoginPage = ({onLoginSuccess}) => {
+const LoginPage = ({ onLoginSuccess }) => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [message, setMessage] = useState('');
@@ -18,9 +15,8 @@ const LoginPage = ({onLoginSuccess}) => {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({username, password}),
+                body: JSON.stringify({ username, password }),
             });
-
 
             const data = await response.json();
 
@@ -32,7 +28,7 @@ const LoginPage = ({onLoginSuccess}) => {
                 document.cookie = `username=${username};path=/`;
 
                 setMessage('Login successful');
-                onLoginSuccess();
+                onLoginSuccess(); // Call onLoginSuccess
             } else {
                 setMessage('Invalid credentials');
             }

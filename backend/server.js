@@ -5,6 +5,7 @@ const express = require('express');
 const cors = require('cors');
 const { getConnection, createDatabaseIfNotExists, createDefaultTables, createFavicon } = require('./db');
 const SECRET_KEY = process.env.SECRET_KEY;
+const { spawn } = require('child_process');
 
 require('dotenv').config();
 
@@ -111,5 +112,50 @@ app.use('/api/validate-token', validateToken);
 app.get('/api/validate-token', (req, res) => {
   res.send('This is a protected route.');
 });
+app.post('/api/generate-image', (req, res) => {
+  const {
+    seed = -1,
+    prompt = 'a photograph of a cat',
+    file_identifier = 'cat',
+    height = 312,
+    width = 312,
+    inference_steps = 50,
+    prompt_strength = 10.0,
+    multiple = false,
+    collection_name = 'imagetool'
+  } = req.body;
+
+  // Execute the Python script using the `spawn` function
+  const pythonProcess = spawn('python', ['./generate_image.py', `--seed=${seed}`, `--prompt=${prompt}`, `--file_identifier=${file_identifier}`, `--height=${height}`, `--width=${width}`, `--inference_steps=${inference_steps}`, `--prompt_strength=${prompt_strength}`, `--multiple=${multiple}`, `--collection_name=${collection_name}`]);
+
+  // Handle the output of the Python script
+  pythonProcess.stdout.on('data', (data) => {
+    const output = data.toString();
+    console.log(`Python Script Output: ${output}`);
+
+    // You can send the output to the frontend if needed
+    res.json({ success: true, message: 'Image generation successful', output });
+  });
+
+  pythonProcess.stderr.on('data', (data) => {
+    const error = data.toString();
+    console.error(`Python Script Error: ${error}`);
+
+    // Handle errors and send an error response to the frontend
+    res.status(500).json({ success: false, message: 'Image generation failed', error });
+  });
+
+  // Handle the script's exit event
+  pythonProcess.on('close', (code) => {
+    if (code === 0) {
+      // Python script executed successfully
+      console.log('Python Script Completed');
+    } else {
+      // Python script encountered an error
+      console.error(`Python Script Exited with Code ${code}`);
+    }
+  });
+});
+
 
 app.listen(SERVER_PORT, SERVER_HOST, () => console.log(`Server running on http://${SERVER_HOST}:${SERVER_PORT}/`));
