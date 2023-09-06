@@ -91,7 +91,7 @@ class Imagine:
         images_json = []
 
         if multiple:
-            styles = pd.read_csv("../styles/artist_styles").fillna("professional")
+            styles = pd.read_csv("./styles/artist_styles").fillna("professional")
             for row_num, row in styles.iterrows():
                 new_part = ", in the style of " + ", in the style of ".join(row)
                 full_prompt = prompt + new_part

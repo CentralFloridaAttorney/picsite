@@ -2,7 +2,7 @@
 import asyncio
 import argparse
 
-from backend.imagine import Imagine
+from imagine import Imagine
 
 
 async def generate_images(seed, prompt, file_identifier, height, width, inference_steps, prompt_strength, multiple,
