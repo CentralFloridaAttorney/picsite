@@ -12,7 +12,7 @@ require('dotenv').config();
 const app = express();
 
 // Configure CORS to allow multiple origins
-const allowedOrigins = ['http://localhost:50005', 'http://71.42.29.18:50005', 'http://192.168.1.227:50005', 'http://0.0.0.0:50005'];
+const allowedOrigins = ['http://localhost:50005', 'http://71.42.29.18:50005', 'http://192.168.1.227:50005', 'http://0.0.0.0:50005', 'http://localhost:53000'];
 
 const corsOptions = {
     origin: allowedOrigins,
@@ -26,9 +26,10 @@ app.use(express.json());
 
 // Your other middleware and route handling code here
 
-
 const SERVER_PORT = process.env.SERVER_PORT || 3000;
 const SERVER_HOST = process.env.SERVER_HOST || 'localhost';
+
+const PYTHON_EXECUTABLE = process.env.PYTHON_EXECUTABLE; // Get Python executable path from environment
 
 const initializeServer = () => {
     createDatabaseIfNotExists(err => {
@@ -85,6 +86,7 @@ app.post('/api/login', (req, res) => {
         });
     });
 });
+
 app.post('/api/filenames', (req, res) => {
     const {access_token} = req.body;
 
@@ -109,9 +111,11 @@ app.post('/api/filenames', (req, res) => {
 });
 
 app.use('/api/validate-token', validateToken);
+
 app.get('/api/validate-token', (req, res) => {
     res.send('This is a protected route.');
 });
+
 app.post('/api/generate-image', (req, res) => {
     const {
         seed = -1,
@@ -122,11 +126,10 @@ app.post('/api/generate-image', (req, res) => {
         inference_steps = 50,
         prompt_strength = 10.0,
         multiple = false,
-        collection_name = 'imagetool'
     } = req.body;
 
     // Execute the Python script using the `spawn` function
-    const pythonProcess = spawn('python', [
+    const pythonProcess = spawn(PYTHON_EXECUTABLE, [
         './generate_image.py',
         `--seed=${seed}`,
         `--prompt=${prompt}`,
@@ -134,9 +137,7 @@ app.post('/api/generate-image', (req, res) => {
         `--height=${height}`,
         `--width=${width}`,
         `--inference_steps=${inference_steps}`,
-        `--prompt_strength=${prompt_strength}`,
-        `--multiple=${multiple ? 'true' : 'false'}`, // Convert boolean to string
-        `--collection_name=${collection_name}`
+        `--prompt_strength=${prompt_strength}`
     ]);
 
     // Handle the output of the Python script
@@ -147,26 +148,21 @@ app.post('/api/generate-image', (req, res) => {
         // You can send the output to the frontend if needed
         res.json({success: true, message: 'Image generation successful', output});
     });
-
     pythonProcess.stderr.on('data', (data) => {
-        const error = data.toString();
-        console.error(`Python Script Error: ${error}`);
-
-        // Handle errors and send an error response to the frontend
-        res.status(500).json({success: false, message: 'Image generation failed', error});
+        const errorOutput = data.toString();
+        console.error(`Python Script Error Output: ${errorOutput}`);
     });
 
     // Handle the script's exit event
-    pythonProcess.on('close', (code) => {
-        if (code === 0) {
-            // Python script executed successfully
-            console.log('Python Script Completed');
-        } else {
-            // Python script encountered an error
-            console.error(`Python Script Exited with Code ${code}`);
-        }
-    });
+    // pythonProcess.on('close', (code) => {
+    //     if (code === 0) {
+    //         // Python script executed successfully
+    //         console.log('Python Script Completed');
+    //     } else {
+    //         // Python script encountered an error
+    //         console.error(`Python Script Exited with Code ${code}`);
+    //     }
+    // });
 });
-
 
 app.listen(SERVER_PORT, SERVER_HOST, () => console.log(`Server running on http://${SERVER_HOST}:${SERVER_PORT}/`));

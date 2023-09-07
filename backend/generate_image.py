@@ -1,12 +1,12 @@
 # generate_image.py
 import asyncio
 import argparse
+import json
 
 from imagine import Imagine
 
 
-async def generate_images(seed, prompt, file_identifier, height, width, inference_steps, prompt_strength, multiple,
-                          collection_name):
+async def generate_images(seed, prompt, file_identifier, height, width, inference_steps, prompt_strength, multiple):
     # Create an instance of the Imagine class
     imagine = Imagine()
 
@@ -19,11 +19,10 @@ async def generate_images(seed, prompt, file_identifier, height, width, inferenc
         width=width,
         inference_steps=inference_steps,
         prompt_strength=prompt_strength,
-        multiple=multiple,
-        collection_name=collection_name
+        multiple=multiple
     )
-
-    return image_json
+    image_json_str = json.dumps(image_json)
+    return image_json_str
 
 
 def main():
@@ -35,9 +34,7 @@ def main():
     parser.add_argument('--width', type=int, default=312, help='Image width')
     parser.add_argument('--inference_steps', type=int, default=50, help='Inference steps')
     parser.add_argument('--prompt_strength', type=float, default=10.0, help='Prompt strength')
-    parser.add_argument('--multiple', action='store_true', help='Generate multiple images')
-    parser.add_argument('--collection_name', type=str, default='imagetool', help='Collection name')
-
+    parser.add_argument('--multiple', type=bool, default=False, help='Generate multiple images')
     args = parser.parse_args()
 
     # Call the generate_images function with the parsed arguments
@@ -49,8 +46,7 @@ def main():
         args.width,
         args.inference_steps,
         args.prompt_strength,
-        args.multiple,
-        args.collection_name
+        args.multiple
     ))
 
     print(image_json)

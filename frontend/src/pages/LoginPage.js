@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 
-const BACKEND_URL = `http://0.0.0.0:50011`;
+const BACKEND_URL = `http://localhost:53999`;
 
 const LoginPage = ({ onLoginSuccess }) => {
     const [username, setUsername] = useState('');

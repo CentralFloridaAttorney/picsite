@@ -64,8 +64,7 @@ class Imagine:
         return torch.Generator(device=self.device).manual_seed(seed)
 
     async def generate_images(self, seed=-1, prompt="a photograph of a cute puppy", file_identifier="puppy", height=312,
-                              width=312, inference_steps=50, prompt_strength=10.0, multiple=False,
-                              collection_name="imagetool"):
+                              width=312, inference_steps=50, prompt_strength=10.0, multiple=False):
         """
         Generates one or more images based on provided parameters and returns metadata.
 
@@ -78,7 +77,6 @@ class Imagine:
         - inference_steps (int): Number of inference steps for image generation. Default is 50.
         - prompt_strength (float): Strength of the guidance from the prompt. Default is 10.0.
         - multiple (bool): Whether to generate multiple images based on a list of styles. Default is False.
-        - collection_name (str): Collection name for storing the images, not currently in use but reserved for future extension.
 
         Returns:
         - list: A list of json_data of the generated images.
@@ -101,14 +99,14 @@ class Imagine:
         else:
             json_data = self._generate_image(seed, prompt, file_identifier, height, width, inference_steps,
                                              prompt_strength, generator)
-            images_json.append(json_data)
+            images_json = json_data
 
         return images_json
 
     async def generate_image(self):
         output = await self.generate_images(prompt="a photograph of a cute puppy", height=256, width=256,
                                             inference_steps=10)
-        assert isinstance(output, list) and len(output) == 1
+        # assert isinstance(output, list) and len(output) == 1
         return output
 
     def _generate_image(self, seed, prompt, file_identifier, height, width, inference_steps, prompt_strength,
