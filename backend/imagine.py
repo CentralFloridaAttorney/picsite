@@ -19,7 +19,7 @@ class Imagine:
     DEFAULT_MODEL_ID = "CompVis/stable-diffusion-v1-4"
     DEFAULT_PRETRAINED_OFFICE = "/home/overlordx/_models/stable_diffusion"
 
-    def __init__(self, device=DEFAULT_DEVICE, model_id=DEFAULT_PRETRAINED_OFFICE):
+    def __init__(self, device=DEFAULT_DEVICE, model_id=DEFAULT_MODEL_ID):
         """
         Constructor for the Imagine class.
 
