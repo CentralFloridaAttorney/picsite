@@ -7,6 +7,7 @@ import uuid
 from datetime import datetime
 
 import pandas as pd
+import pymongo
 import torch
 from diffusers import StableDiffusionPipeline
 
@@ -19,7 +20,7 @@ class Imagine:
     DEFAULT_MODEL_ID = "CompVis/stable-diffusion-v1-4"
     DEFAULT_PRETRAINED_OFFICE = "/home/overlordx/_models/stable_diffusion"
 
-    def __init__(self, device=DEFAULT_DEVICE, model_id=DEFAULT_MODEL_ID):
+    def __init__(self, device=DEFAULT_DEVICE, model_id=DEFAULT_PRETRAINED_OFFICE):
         """
         Constructor for the Imagine class.
 
@@ -46,7 +47,7 @@ class Imagine:
         self.device = device
         self.model_id = model_id
 
-        self.imagine_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../frontend/public/imagine'))
+        self.imagine_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../frontend/public/imagine'))
         os.makedirs(self.imagine_path, exist_ok=True)
 
         # Initialize the diffusion pipeline for image generation from a pre-trained model
@@ -63,6 +64,7 @@ class Imagine:
         """
         return torch.Generator(device=self.device).manual_seed(seed)
 
+
     async def generate_images(self, seed=-1, prompt="a photograph of a cute puppy", file_identifier="puppy", height=312,
                               width=312, inference_steps=50, prompt_strength=10.0):
         """
@@ -76,7 +78,6 @@ class Imagine:
         - width (int): Width of the generated image in pixels. Default is 312.
         - inference_steps (int): Number of inference steps for image generation. Default is 50.
         - prompt_strength (float): Strength of the guidance from the prompt. Default is 10.0.
-        - multiple (bool): Whether to generate multiple images based on a list of styles. Default is False.
 
         Returns:
         - list: A list of json_data of the generated images.
@@ -88,6 +89,11 @@ class Imagine:
         generator = self._get_generator(seed)
         images_json = []
 
+        # Initialize MongoDB connection
+        client = pymongo.MongoClient("mongodb://localhost:50011/")  # Update with your MongoDB connection URL
+        db = client["picstream_db"]
+        images_collection = db["images"]
+
         if multiple:
             styles = pd.read_csv("./styles/artist_styles").fillna("professional")
             for row_num, row in styles.iterrows():
@@ -96,17 +102,22 @@ class Imagine:
                 json_data = self._generate_image(seed, full_prompt, file_identifier, height, width,
                                                  inference_steps, prompt_strength, generator)
                 images_json.append(json_data)
+                # Insert the JSON data into MongoDB
+                images_collection.insert_one(json_data)
         else:
-            json_data = self._generate_image(seed, prompt, file_identifier, height, width, inference_steps,
+            image_data = self._generate_image(seed, prompt, file_identifier, height, width, inference_steps,
                                              prompt_strength, generator)
-            images_json = json_data
+            json_data = json.dumps(image_data)
+            self.send_json_to_mongodb(json_data)
+            # images_collection.insert_one(json_data)
+
+        client.close()
 
         return images_json
 
     async def generate_image(self):
         output = await self.generate_images(prompt="a photograph of a cute puppy", height=256, width=256,
                                             inference_steps=10)
-        # assert isinstance(output, list) and len(output) == 1
         return output
 
     def _generate_image(self, seed, prompt, file_identifier, height, width, inference_steps, prompt_strength,
@@ -183,6 +194,27 @@ class Imagine:
         }
 
         return json_data
+
+    def send_json_to_mongodb(self, json_data, host='localhost', port=50011, database='picstream_db', collection='images'):
+        try:
+            # Connect to the MongoDB server
+            client = pymongo.MongoClient(host, port)
+
+            # Access the specified database and collection
+            db = client[database]
+            coll = db[collection]
+
+            # Insert the JSON data into the collection
+            coll.insert_one(json_data)
+
+            print("JSON data successfully inserted into MongoDB.")
+
+        except Exception as e:
+            print(f"Error: {str(e)}")
+
+        finally:
+            # Close the MongoDB connection
+            client.close()
 
 
 async def test_init():

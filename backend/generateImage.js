@@ -20,8 +20,6 @@ async function generateImage(seed, prompt, fileIdentifier, height, width, infere
             args.push('--multiple'); // Include --multiple if true
         }
 
-        args.push(`--collection_name=${collectionName}`);
-
         const pythonProcess = spawn(pythonPath, args);
 
         let outputData = '';
