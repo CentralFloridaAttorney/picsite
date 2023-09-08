@@ -1,8 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import axios from 'axios';
-
 const BACKEND_URL = `http://localhost:53999`;
-
 // Function to set a cookie
 const setCookie = (name, value, days) => {
     const date = new Date();
@@ -62,9 +60,7 @@ const ImaginePage = () => {
                 height: 312,
                 width: 312,
                 inference_steps: 50,
-                prompt_strength: 10.0,
-                multiple: false,
-                collection_name: "imagetool",
+                prompt_strength: 10.0
             };
 
             // Make a POST request to the backend with the parameters in the request body
@@ -85,7 +81,7 @@ const ImaginePage = () => {
             <h1>Imagine Page</h1>
             <img src="default.png" alt="Default"/>
             <p>This is me!</p>
-            {userId && <p>Welcome, your ID is {userId}</p>}
+            {username && <p>Welcome, your ID is {username}</p>}
             <button onClick={handleImageGeneration}>Generate Image</button>
         </div>
     );

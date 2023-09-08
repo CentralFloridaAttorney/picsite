@@ -1,12 +1,12 @@
-# generate_image.py
+# generate_image_mongo.py
 import asyncio
 import argparse
 import json
 
-from imagine import Imagine
+from imagine_mongo import Imagine
 
 
-async def generate_images(seed, prompt, file_identifier, height, width, inference_steps, prompt_strength):
+async def generate_images(seed, prompt, file_identifier, height, width, inference_steps, prompt_strength, multiple):
     # Create an instance of the Imagine class
     imagine = Imagine()
 
@@ -33,6 +33,7 @@ def main():
     parser.add_argument('--width', type=int, default=312, help='Image width')
     parser.add_argument('--inference_steps', type=int, default=50, help='Inference steps')
     parser.add_argument('--prompt_strength', type=float, default=10.0, help='Prompt strength')
+    parser.add_argument('--multiple', type=bool, default=False, help='Generate multiple images')
     args = parser.parse_args()
 
     # Call the generate_images function with the parsed arguments
@@ -44,6 +45,7 @@ def main():
         args.width,
         args.inference_steps,
         args.prompt_strength,
+        args.multiple
     ))
 
     print(image_json)

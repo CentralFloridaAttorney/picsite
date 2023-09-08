@@ -148,11 +148,11 @@ app.post('/api/generate-image', (req, res) => {
         // You can send the output to the frontend if needed
         res.json({success: true, message: 'Image generation successful', output});
     });
-    pythonProcess.stderr.on('data', (data) => {
-        const errorOutput = data.toString();
-        console.error(`Python Script Error Output: ${errorOutput}`);
-    });
 
+    // pythonProcess.stderr.on('data', (data) => {
+    //     const errorOutput = data.toString();
+    //     console.error(`Python Script Error Output: ${errorOutput}`);
+    // });
     // Handle the script's exit event
     // pythonProcess.on('close', (code) => {
     //     if (code === 0) {

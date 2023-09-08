@@ -173,6 +173,7 @@ pydeck==0.8.0
 pydub==0.25.1
 Pygments==2.14.0
 PyJWT==2.6.0
+pymongo~=4.5.0
 Pympler==1.0.1
 pynndescent==0.5.10
 pyparsing==3.0.9
@@ -278,3 +279,4 @@ zope.hookable==5.4
 zope.interface==6.0
 zope.lifecycleevent==5.0
 zope.proxy==5.0.0
+

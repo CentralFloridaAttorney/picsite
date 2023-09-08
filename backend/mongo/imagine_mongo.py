@@ -109,6 +109,7 @@ class Imagine:
                                              prompt_strength, generator)
             json_data = json.dumps(image_data)
             self.send_json_to_mongodb(json_data)
+            images_json = json_data
             # images_collection.insert_one(json_data)
 
         client.close()
@@ -148,12 +149,12 @@ class Imagine:
         image_path = os.path.join(self.imagine_path, f"{uuid_value}.png")
         image.save(image_path)
 
-        json_data = self._get_json(seed, prompt, file_identifier, height, width,
+        dict_data = self._get_json(seed, prompt, file_identifier, height, width,
                                    inference_steps, prompt_strength, uuid_value)
 
         # self.imagine_dbtool.open_table("images")
-        # self.imagine_dbtool.json2dbtool(primary_key_name="primary_key", json_data=json_data)
-        return json_data
+        # self.imagine_dbtool.json2dbtool(primary_key_name="primary_key", dict_data=dict_data)
+        return dict_data
 
     def _get_json(self, seed, prompt, file_identifier, height, width, inference_steps, prompt_strength, uuid_value):
         """
@@ -195,7 +196,8 @@ class Imagine:
 
         return json_data
 
-    def send_json_to_mongodb(self, json_data, host='localhost', port=50011, database='picstream_db', collection='images'):
+    def send_json_to_mongodb(self, json_data, host='localhost', port=50011, database='picstream_db',
+                             collection='images'):
         try:
             # Connect to the MongoDB server
             client = pymongo.MongoClient(host, port)
@@ -204,8 +206,11 @@ class Imagine:
             db = client[database]
             coll = db[collection]
 
-            # Insert the JSON data into the collection
-            coll.insert_one(json_data)
+            # Convert the JSON data to a Python dictionary
+            json_dict = json.loads(json_data)
+
+            # Insert the dictionary data into the collection
+            coll.insert_one(json_dict)
 
             print("JSON data successfully inserted into MongoDB.")
 

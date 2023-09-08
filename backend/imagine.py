@@ -76,7 +76,6 @@ class Imagine:
         - width (int): Width of the generated image in pixels. Default is 312.
         - inference_steps (int): Number of inference steps for image generation. Default is 50.
         - prompt_strength (float): Strength of the guidance from the prompt. Default is 10.0.
-        - multiple (bool): Whether to generate multiple images based on a list of styles. Default is False.
 
         Returns:
         - list: A list of json_data of the generated images.
