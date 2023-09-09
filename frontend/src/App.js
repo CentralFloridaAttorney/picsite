@@ -4,10 +4,8 @@ import Home from './pages/Home';
 import LoginPage from './pages/LoginPage';
 import BottomBar from "./components/BottomBar";
 import PageTwo from "./pages/PageTwo";
-import PageThree from "./pages/PageThree";
 import PageFour from "./pages/PageFour";
 import ImaginePage from "./pages/ImaginePage";
-import PageOne from "./pages/PageOne";
 
 const App = () => {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -15,6 +13,23 @@ const App = () => {
 
     const handleLoginSuccess = () => {
         setIsLoggedIn(true);
+    };
+
+    const renderPage = () => {
+        switch (activePage) {
+            case 'LoginPage':
+                return <LoginPage onLoginSuccess={handleLoginSuccess}/>;
+            case 'Home':
+                return <Home/>;
+            case 'Button 3':
+                return <PageTwo/>;
+            case 'Button 4':
+                return <PageFour/>;
+            case 'ImaginePage':
+                return <ImaginePage/>;
+            default:
+                return <Home/>; // Default to Home page
+        }
     };
 
     const handlePageChange = (pageName) => {
@@ -26,11 +41,7 @@ const App = () => {
             <NavBar/>
             {isLoggedIn ? (
                 <div>
-                    {activePage === 'Home' && <Home/>}
-                    {activePage === 'PageOne' && <PageOne/>}
-                    {activePage === 'Button 3' && <PageTwo/>}
-                    {activePage === 'Button 4' && <PageFour/>}
-                    {activePage === 'Button 5' && <ImaginePage/>}
+                    {renderPage()} {/* Render the current page */}
                 </div>
             ) : (
                 <LoginPage onLoginSuccess={handleLoginSuccess}/>

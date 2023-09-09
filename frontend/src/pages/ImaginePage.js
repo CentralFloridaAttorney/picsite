@@ -1,7 +1,8 @@
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+
 const BACKEND_URL = `http://localhost:53999`;
-// Function to set a cookie
+
 const setCookie = (name, value, days) => {
     const date = new Date();
     date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
@@ -12,69 +13,61 @@ const setCookie = (name, value, days) => {
 const ImaginePage = () => {
     const [userId, setUserId] = useState(null);
     const [username, setUsername] = useState('');
+    const [imageGenerationOutput, setImageGenerationOutput] = useState('');
 
     useEffect(() => {
-        // Extract the access token and username from the cookie
-        const access_token = document.cookie.split('access_token=')[1]?.split(';')[0];
-        const usernameFromCookie = document.cookie.split('username=')[1]?.split(';')[0];
-
-        const fetchId = async () => {
+        const fetchUserData = async () => {
             try {
-                // Define API URL
-                const apiUrl = `${BACKEND_URL}/api/validate-token`;
+                const access_token = document.cookie.split('access_token=')[1]?.split(';')[0];
+                const usernameFromCookie = document.cookie.split('username=')[1]?.split(';')[0];
 
-                // Make the GET request
+                const apiUrl = `${BACKEND_URL}/api/validate-token`;
                 const response = await axios.get(apiUrl, {
                     headers: {
                         'Authorization': `Bearer ${access_token}`,
-                        'Username': usernameFromCookie  // Send the username along with the request
+                        'Username': usernameFromCookie
                     }
                 });
 
                 const data = response.data;
 
-                // If the request is successful, set the userId and username state variables
                 if (data.success) {
                     setUserId(data.id);
                     setUsername(data.username);
                     setCookie('username', data.username, 1);
                 }
-
             } catch (error) {
-                // Log any errors
                 console.error('An error occurred:', error);
             }
         };
 
-        // Invoke the fetchId function
-        fetchId();
-    }, []);  // The empty dependency array means this useEffect runs once when the component mounts
+        fetchUserData();
+    }, []);
 
     const handleImageGeneration = async () => {
         try {
-            // Define the parameters you want to pass to the Python function
             const requestData = {
                 seed: -1,
                 prompt: "a photograph of a cute puppy",
                 file_identifier: "puppy",
                 height: 312,
                 width: 312,
-                inference_steps: 50,
+                inference_steps: 5,
                 prompt_strength: 10.0
             };
 
-            // Make a POST request to the backend with the parameters in the request body
             const response = await axios.post(`${BACKEND_URL}/api/generate-image`, requestData);
 
-            // Handle the response here (e.g., display a success message)
-            console.log('Image generation successful:', response.data);
-
+            if (response.data.success) {
+                setImageGenerationOutput(response.data.output);
+                console.log('Image generation successful:', response.data);
+            } else {
+                console.error('Image generation failed. Server response:', response.data);
+            }
         } catch (error) {
-            // Handle errors (e.g., display an error message)
-            console.error('Image generation failed:', error);
+            console.error('An error occurred during image generation:', error);
         }
     };
-
 
     return (
         <div>
@@ -83,6 +76,13 @@ const ImaginePage = () => {
             <p>This is me!</p>
             {username && <p>Welcome, your ID is {username}</p>}
             <button onClick={handleImageGeneration}>Generate Image</button>
+
+            {imageGenerationOutput && (
+                <div>
+                    <h2>Image Generation Output:</h2>
+                    <pre>{imageGenerationOutput}</pre>
+                </div>
+            )}
         </div>
     );
 };
